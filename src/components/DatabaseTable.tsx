@@ -1121,6 +1121,7 @@ export function DatabaseTable({ dbFile, manager, externalView, onViewChange }: D
 						value={info.getValue()}
 						rowIndex={info.row.index}
 						columnId={col.id}
+						links={info.row.original._rollupLinks?.[col.id]}
 					/>
 				),
 			})

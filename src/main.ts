@@ -134,6 +134,14 @@ export default class NotionBasesPlugin extends Plugin {
 			})
 		)
 
+		// Relações guardam o nome da nota e o caminho do database: mantê-las
+		// em dia quando notas ou databases são renomeados/movidos
+		this.registerEvent(
+			this.app.vault.on('rename', (file, oldPath) => {
+				if (file instanceof TFile) void this.manager.handleRename(file, oldPath)
+			})
+		)
+
 		// Embed de database em notas via ```nb-database
 		registerDatabaseEmbed(this)
 

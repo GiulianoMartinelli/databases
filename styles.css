@@ -2486,6 +2486,24 @@
 	gap: 3px;
 }
 
+/* Related pages open their note, like internal links */
+.nb-relation-link {
+	cursor: pointer;
+	color: var(--link-color);
+	font-style: normal;
+}
+
+.nb-relation-link:hover {
+	color: var(--link-color-hover);
+	text-decoration: underline;
+}
+
+/* Name that matches no note (deleted, or renamed outside the vault) */
+.nb-relation-badge--unresolved {
+	color: var(--text-faint);
+	font-style: italic;
+}
+
 .nb-relation-check {
 	margin-right: 4px;
 	color: var(--interactive-accent);

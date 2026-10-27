@@ -9,6 +9,7 @@ import {
 	FolderArrangementConfig,
 	InlineFieldMeta,
 	NoteRow,
+	RelatedPage,
 	RollupFunction,
 	ViewConfig,
 } from './types'
@@ -20,6 +21,16 @@ export const DATABASE_MARKER = 'notion-bases'
 
 export function sanitizeSegment(s: string): string {
 	return s.replace(/[/\\:*?"<>|]/g, '').replace(/\s+/g, ' ').trim()
+}
+
+/** Note names stored in a relation cell (a single name or a list). */
+export function relationNames(value: unknown): string[] {
+	if (Array.isArray(value)) return value.filter((v): v is string => typeof v === 'string')
+	return typeof value === 'string' && value ? [value] : []
+}
+
+function basenameOf(path: string): string {
+	return (path.split('/').pop() ?? path).replace(/\.md$/i, '')
 }
 
 export class DatabaseManager {
@@ -323,6 +334,56 @@ export class DatabaseManager {
 		}
 	}
 
+	// ── Renomeações ────────────────────────────────────────────────────────
+
+	/**
+	 * Keeps relations working after a rename. Relation cells store the related
+	 * note's name and relation/lookup columns store the target database's
+	 * path, so both are rewritten when a note or a database is renamed or moved.
+	 */
+	async handleRename(file: TFile, oldPath: string): Promise<void> {
+		if (file.extension !== 'md') return
+		if (this.isDatabaseFile(file)) {
+			await this.updateDatabasePathRefs(oldPath, file.path)
+			return
+		}
+		const oldName = basenameOf(oldPath)
+		if (oldName === file.basename) return
+		const dbFile = this.findGoverningDatabase(file)
+		if (dbFile) await this.renameRelationValues(dbFile.path, oldName, file.basename)
+	}
+
+	/** Replaces `oldName` by `newName` in every relation column that points at the database `targetDbPath`. */
+	private async renameRelationValues(targetDbPath: string, oldName: string, newName: string): Promise<void> {
+		for (const db of this.getAllDatabases()) {
+			const cols = this.readConfig(db).schema.filter(c => c.type === 'relation' && c.refDatabasePath === targetDbPath)
+			if (cols.length === 0) continue
+			for (const note of this.getNotesInDatabase(db)) {
+				const fm = this.app.metadataCache.getFileCache(note)?.frontmatter
+				if (!fm || !cols.some(c => relationNames(fm[c.id]).includes(oldName))) continue
+				await this.app.fileManager.processFrontMatter(note, (fm2: Record<string, unknown>) => {
+					for (const c of cols) {
+						const value = fm2[c.id]
+						if (Array.isArray(value)) fm2[c.id] = (value as unknown[]).map(v => (v === oldName ? newName : v))
+						else if (value === oldName) fm2[c.id] = newName
+					}
+				})
+			}
+		}
+	}
+
+	/** Points relation/lookup columns at a database's new path after it moved. */
+	private async updateDatabasePathRefs(oldPath: string, newPath: string): Promise<void> {
+		if (oldPath === newPath) return
+		for (const db of this.getAllDatabases()) {
+			const config = this.readConfig(db)
+			const cols = config.schema.filter(c => c.refDatabasePath === oldPath)
+			if (cols.length === 0) continue
+			for (const col of cols) col.refDatabasePath = newPath
+			await this.writeConfig(db, config)
+		}
+	}
+
 	async renameNote(file: TFile, newBasename: string): Promise<void> {
 		const trimmed = newBasename.trim()
 		if (!trimmed || trimmed === file.basename) return
@@ -613,17 +674,17 @@ export class DatabaseManager {
 		)
 		if (rollupCols.length === 0) return rows
 
-		const refDataCache = new Map<string, NoteRow[]>()
+		const refDataCache = new Map<string, { rows: NoteRow[]; schema: ColumnSchema[] }>()
 		for (const col of rollupCols) {
 			const relationCol = schema.find(c => c.id === col.rollupRelationColumnId)
 			if (!relationCol || relationCol.type !== 'relation' || !relationCol.refDatabasePath) continue
 			const path = relationCol.refDatabasePath
 			if (!refDataCache.has(path)) {
 				const refDbFile = this.app.vault.getFileByPath(path)
-				if (!refDbFile) { refDataCache.set(path, []); continue }
+				if (!refDbFile) { refDataCache.set(path, { rows: [], schema: [] }); continue }
 				const refConfig = this.readConfig(refDbFile)
 				const refNotes = this.getNotesInDatabase(refDbFile)
-				refDataCache.set(path, refNotes.map(f => this.getNoteDataSync(f, refConfig.schema)))
+				refDataCache.set(path, { rows: refNotes.map(f => this.getNoteDataSync(f, refConfig.schema)), schema: refConfig.schema })
 			}
 		}
 
@@ -632,16 +693,26 @@ export class DatabaseManager {
 			for (const col of rollupCols) {
 				const relationCol = schema.find(c => c.id === col.rollupRelationColumnId)
 				if (!relationCol || !relationCol.refDatabasePath) { result[col.id] = null; continue }
-				const refRows = refDataCache.get(relationCol.refDatabasePath) ?? []
-				const rawRelation = row[relationCol.id]
-				const relatedTitles: string[] = Array.isArray(rawRelation)
-					? rawRelation.filter((v): v is string => typeof v === 'string')
-					: (typeof rawRelation === 'string' && rawRelation ? [rawRelation] : [])
+				const ref = refDataCache.get(relationCol.refDatabasePath) ?? { rows: [], schema: [] }
+				const relatedTitles = relationNames(row[relationCol.id])
 				if (relatedTitles.length === 0) { result[col.id] = null; continue }
-				const matchingRows = refRows.filter(r => relatedTitles.includes(r._title))
+				const matchingRows = ref.rows.filter(r => relatedTitles.includes(r._title))
 				const targetId = col.rollupTargetColumnId!
 				const values = matchingRows.map(r => targetId === '_title' ? r._title : r[targetId]).filter(v => v !== null && v !== undefined)
 				result[col.id] = this.applyRollupFunction(values, col.rollupFunction!)
+
+				// A list of pages (related titles, or a relation of the related
+				// database) is linkable: keep which notes it lists.
+				if (col.rollupFunction === 'list') {
+					const targetCol = ref.schema.find(c => c.id === targetId)
+					const pagesDb = targetId === '_title'
+						? relationCol.refDatabasePath
+						: targetCol?.type === 'relation' ? targetCol.refDatabasePath : undefined
+					if (pagesDb) {
+						const pages: RelatedPage[] = values.flatMap(relationNames).map(name => ({ name, databasePath: pagesDb }))
+						result._rollupLinks = { ...result._rollupLinks, [col.id]: pages }
+					}
+				}
 			}
 			return result
 		})

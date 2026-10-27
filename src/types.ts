@@ -215,10 +215,18 @@ export interface InlineFieldMeta {
 
 // ── Row data ────────────────────────────────────────────────────────────────
 
+/** A page referenced by a relation or rollup: its note name in a database. */
+export interface RelatedPage {
+	name: string
+	databasePath: string
+}
+
 export interface NoteRow {
 	_file: TFile
 	_title: string
 	_inlineFields?: Record<string, InlineFieldMeta>
+	/** Pages listed by `list` rollups, by column id, so the cell can link them. */
+	_rollupLinks?: Record<string, RelatedPage[]>
 	[key: string]: unknown
 }
 

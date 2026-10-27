@@ -1,10 +1,11 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { TFile } from 'obsidian'
-import { ColumnSchema, NumberFormat, SelectOption } from '../../types'
+import { ColumnSchema, NumberFormat, RelatedPage, SelectOption } from '../../types'
 import { useApp } from '../../context'
 import { t } from '../../i18n'
 import { IconClock, IconFilm, IconMusic, IconPhone } from '../icons'
+import { findRelatedNote, openRelatedNote } from '../../related-notes'
 
 interface CellProps {
 	col: ColumnSchema
@@ -12,6 +13,8 @@ interface CellProps {
 	rowIndex: number
 	columnId: string
 	file?: TFile
+	/** Pages listed by a `list` rollup, rendered as links. */
+	links?: RelatedPage[]
 }
 
 // Hook para acessar o meta da tabela via contexto implícito
@@ -129,10 +132,11 @@ function LinkCell({ value, href, isEditing, inputType, onStartEdit, onCommit, on
 	)
 }
 
-export const CellRenderer = React.memo(function CellRenderer({ col, value, rowIndex, columnId, file }: CellProps) {
+export const CellRenderer = React.memo(function CellRenderer({ col, value, rowIndex, columnId, file, links }: CellProps) {
 	const { editingCell, setEditingCell, updateCell, relationOptions } = useCellContext()
 	const app = useApp()
 	const isEditing = editingCell?.rowIndex === rowIndex && editingCell?.columnId === columnId
+	const openNote = (note: TFile, e: MouseEvent) => openRelatedNote(app, note, e)
 
 	const startEditing = () => {
 		if (col.type === 'formula' || col.type === 'lookup' || col.type === 'rollup' || col.type === 'checkbox') return
@@ -235,6 +239,8 @@ export const CellRenderer = React.memo(function CellRenderer({ col, value, rowIn
 				<RelationCell
 					value={relArray}
 					options={relationOptions.get(columnId) ?? []}
+					findNote={name => findRelatedNote(app, col.refDatabasePath, name)}
+					onOpenNote={openNote}
 					isEditing={isEditing}
 					onStartEdit={startEditing}
 					onCommit={v => { void updateCell(rowIndex, columnId, v.length > 0 ? v : null); setEditingCell(null) }}
@@ -300,7 +306,14 @@ export const CellRenderer = React.memo(function CellRenderer({ col, value, rowIn
 			return <LookupCell value={value} col={col} />
 
 		case 'rollup':
-			return <RollupCell value={value} col={col} />
+			return (
+				<RollupCell
+					value={value}
+					col={col}
+					pages={links?.map(p => ({ name: p.name, file: findRelatedNote(app, p.databasePath, p.name) }))}
+					onOpenNote={openNote}
+				/>
+			)
 
 		case 'image':
 			return (
@@ -1367,20 +1380,43 @@ function LookupCell({ value, col }: { value: unknown; col: ColumnSchema }) {
 	)
 }
 
-function RollupCell({ value, col }: { value: unknown; col: ColumnSchema }) {
+function RollupCell({ value, col, pages, onOpenNote }: {
+	value: unknown
+	col: ColumnSchema
+	/** When the rollup lists pages, each one becomes a link. */
+	pages?: { name: string; file: TFile | null }[]
+	onOpenNote: (file: TFile, e: MouseEvent) => void
+}) {
 	const display = value === null || value === undefined ? '—' : stringifyScalar(value)
 	return (
 		<div className="nb-cell-formula nb-cell-rollup" title={t('rollup_panel_title') + ': ' + (col.rollupFunction ?? '')}>
-			{display}
+			{pages && pages.length > 0
+				? <span className="nb-relation-badges">{pages.map((p, i) => <RelatedPageLink key={`${p.name}-${i}`} name={p.name} file={p.file} onOpen={onOpenNote} />)}</span>
+				: display}
 		</div>
 	)
 }
 
 // ── RelationCell ─────────────────────────────────────────────────────────────
 
-function RelationCell({ value, options, isEditing, onStartEdit, onCommit }: {
+/** A related page shown as a badge; a link to the note when it exists. */
+function RelatedPageLink({ name, file, onOpen }: { name: string; file: TFile | null; onOpen: (file: TFile, e: MouseEvent) => void }) {
+	if (!file) return <span className="nb-relation-badge nb-relation-badge--unresolved">{name}</span>
+	return (
+		<span
+			className="nb-relation-badge nb-relation-link"
+			onClick={e => { e.stopPropagation(); onOpen(file, e.nativeEvent) }}
+		>
+			{name}
+		</span>
+	)
+}
+
+function RelationCell({ value, options, findNote, onOpenNote, isEditing, onStartEdit, onCommit }: {
 	value: string[]
 	options: string[]
+	findNote: (name: string) => TFile | null
+	onOpenNote: (file: TFile, e: MouseEvent) => void
 	isEditing: boolean
 	onStartEdit: () => void
 	onCommit: (v: string[]) => void
@@ -1459,7 +1495,7 @@ function RelationCell({ value, options, isEditing, onStartEdit, onCommit }: {
 		<div className="nb-cell-select-wrapper" ref={wrapperRef}>
 			<div className="nb-cell-clickable" onClick={onStartEdit}>
 				{value.length > 0
-					? <span className="nb-relation-badges">{value.map(v => <span key={v} className="nb-relation-badge">{v}</span>)}</span>
+					? <span className="nb-relation-badges">{value.map(v => <RelatedPageLink key={v} name={v} file={findNote(v)} onOpen={onOpenNote} />)}</span>
 					: <span className="nb-cell-empty">—</span>
 				}
 			</div>
