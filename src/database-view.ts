@@ -6,7 +6,7 @@ import { AppContext } from './context'
 import { DatabaseRoot } from './components/DatabaseRoot'
 import type NotionBasesPlugin from './main'
 
-export const DATABASE_VIEW_TYPE = 'notion-bases-view'
+export const DATABASE_VIEW_TYPE = 'databases-view'
 
 interface DatabaseViewState extends Record<string, unknown> {
 	dbFilePath?: string
@@ -82,7 +82,7 @@ export class DatabaseView extends ItemView {
 		}
 
 		container.empty()
-		container.addClass('notion-bases-view-container')
+		container.addClass('databases-view-container')
 
 		// No keyboard detection needed — search input is now inside a BottomSheet
 		// (rendered via portal to activeDocument.body), which avoids Obsidian's behavior

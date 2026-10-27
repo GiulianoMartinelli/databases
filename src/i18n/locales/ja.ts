@@ -505,7 +505,7 @@ const ja: Partial<Record<keyof typeof en, string>> = {
 	formula_err_not_implemented: '未実装の関数：$fn()',
 
 	// Plugin
-	plugin_display_name: 'Notion Bases',
+	plugin_display_name: 'Databases',
 	no_databases_found: 'データベースが見つかりません。「新しいデータベースを作成」コマンドを使用して作成してください。',
 
 	// Commands

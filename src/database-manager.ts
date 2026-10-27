@@ -715,7 +715,7 @@ export class DatabaseManager {
 			'    columnWidths: {}',
 			'---',
 			'',
-			'> [!tip] Notion Bases',
+			'> [!tip] Databases',
 			'> ' + t('db_tip_body'),
 			'',
 		].join('\n')

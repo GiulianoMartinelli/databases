@@ -1,10 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   Notion Bases — estilos usando CSS variables do Obsidian
+   Databases — estilos usando CSS variables do Obsidian
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ── Container principal ─────────────────────────────────────────────────── */
 
-.notion-bases-view-container {
+.databases-view-container {
 	display: flex;
 	flex-direction: column;
 	height: 100%;

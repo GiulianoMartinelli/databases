@@ -505,7 +505,7 @@ const fr: Partial<Record<keyof typeof en, string>> = {
 	formula_err_not_implemented: 'Fonction non implémentée : $fn()',
 
 	// Plugin
-	plugin_display_name: 'Notion Bases',
+	plugin_display_name: 'Databases',
 	no_databases_found: 'Aucune base de données trouvée. Utilisez la commande "créer une nouvelle base de données" pour en créer une.',
 
 	// Commands

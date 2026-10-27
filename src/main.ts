@@ -33,7 +33,7 @@ export default class NotionBasesPlugin extends Plugin {
 		this.registerEditorSuggest(new SelectOptionSuggest(this.app, this.manager))
 
 		// Ribbon — selecionar banco de dados
-		this.addRibbonIcon('table', 'Notion Bases', () => {
+		this.addRibbonIcon('table', 'Databases', () => {
 			this.openDatabasePicker()
 		})
 
