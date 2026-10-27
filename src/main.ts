@@ -9,6 +9,7 @@ import { DatabasePickerModal } from './database-picker-modal'
 import { QuickAddModal } from './quick-add-modal'
 import { registerDatabaseEmbed } from './database-embed'
 import { createLivePlaceholderProcessor } from './live-placeholders'
+import { DatabaseViewSuggest, insertDatabaseView } from './insert-view'
 
 export default class NotionBasesPlugin extends Plugin {
 	settings: NotionBasesSettings
@@ -53,6 +54,16 @@ export default class NotionBasesPlugin extends Plugin {
 				const activeFile = this.app.workspace.getActiveFile()
 				const folderPath = activeFile?.parent?.path ?? ''
 				await this.createAndOpenDatabase(folderPath)
+			},
+		})
+
+		// Inline database views (como o /linked view do Notion)
+		this.registerEditorSuggest(new DatabaseViewSuggest(this.app, this.manager))
+		this.addCommand({
+			id: 'insert-database-view',
+			name: t('cmd_insert_view'),
+			editorCallback: editor => {
+				if (!insertDatabaseView(this.app, this.manager, editor)) new Notice(t('no_databases_found'))
 			},
 		})
 

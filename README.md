@@ -245,6 +245,8 @@ Click **+** in the view tab bar to add a new view. Each view has its own filters
 
 ### Embed in a note
 
+Type `/database` (or `/db`, `/view`) on any line, or run **Insert database view**: pick a database, then show all its views as tabs or pin one view type. The block below is inserted for you.
+
 ````markdown
 ```nb-database
 path: Projects

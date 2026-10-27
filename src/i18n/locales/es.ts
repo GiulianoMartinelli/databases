@@ -531,6 +531,11 @@ const es: Partial<Record<keyof typeof en, string>> = {
 	arr_preview_cancel: 'Cancelar',
 	arr_preview_applied: '$count fila(s) movida(s).',
 
+	// Inline database views
+	cmd_insert_view: 'Insertar vista de base de datos',
+	insert_view_placeholder: 'Mostrar la base de datos como...',
+	insert_view_all: 'Todas las vistas (pestañas)',
+
 	// Quick add
 	cmd_quick_add: 'Añadir fila rápidamente a la base de datos',
 	quick_add_title: 'Añadir rápido',

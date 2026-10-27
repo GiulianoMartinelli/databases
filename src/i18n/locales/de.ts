@@ -531,6 +531,11 @@ const de: Partial<Record<keyof typeof en, string>> = {
 	arr_preview_cancel: 'Abbrechen',
 	arr_preview_applied: '$count Zeile(n) verschoben.',
 
+	// Inline database views
+	cmd_insert_view: 'Datenbankansicht einfügen',
+	insert_view_placeholder: 'Datenbank anzeigen als...',
+	insert_view_all: 'Alle Ansichten (Tabs)',
+
 	// Quick add
 	cmd_quick_add: 'Zeile schnell zur Datenbank hinzufügen',
 	quick_add_title: 'Schnell hinzufügen',

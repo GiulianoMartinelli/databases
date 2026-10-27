@@ -531,6 +531,11 @@ const ptBR: Partial<Record<keyof typeof en, string>> = {
 	arr_preview_cancel: 'Cancelar',
 	arr_preview_applied: '$count linha(s) movida(s).',
 
+	// Inline database views
+	cmd_insert_view: 'Inserir visualização de banco de dados',
+	insert_view_placeholder: 'Mostrar o banco de dados como...',
+	insert_view_all: 'Todas as visualizações (abas)',
+
 	// Quick add
 	cmd_quick_add: 'Adicionar linha rapidamente ao banco de dados',
 	quick_add_title: 'Adição rápida',

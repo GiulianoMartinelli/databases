@@ -531,6 +531,11 @@ const ja: Partial<Record<keyof typeof en, string>> = {
 	arr_preview_cancel: 'キャンセル',
 	arr_preview_applied: '$count 行を移動しました。',
 
+	// Inline database views
+	cmd_insert_view: 'データベースビューを挿入',
+	insert_view_placeholder: 'データベースの表示方法...',
+	insert_view_all: 'すべてのビュー（タブ）',
+
 	// Quick add
 	cmd_quick_add: 'データベースに行をすばやく追加',
 	quick_add_title: 'クイック追加',

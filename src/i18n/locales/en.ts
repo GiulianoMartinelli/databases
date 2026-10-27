@@ -529,6 +529,11 @@ const en = {
 	arr_preview_cancel: 'Cancel',
 	arr_preview_applied: 'Moved $count row(s).',
 
+	// Inline database views
+	cmd_insert_view: 'Insert database view',
+	insert_view_placeholder: 'Show the database as...',
+	insert_view_all: 'All views (tabs)',
+
 	// Quick add
 	cmd_quick_add: 'Quick add row to database',
 	quick_add_title: 'Quick add',

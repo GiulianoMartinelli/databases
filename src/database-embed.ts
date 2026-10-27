@@ -11,6 +11,11 @@ const EMBED_FM_KEY = 'notion-bases-embeds'
 
 const VIEW_TYPES: ReadonlyArray<ViewConfig['type']> = ['table', 'list', 'board', 'gallery', 'calendar', 'timeline', 'chart']
 
+/** Identifies an embed in its hosting note's frontmatter. */
+export function newEmbedId(): string {
+	return 'nb' + Math.random().toString(36).slice(2, 10)
+}
+
 export interface EmbedBlockParams {
 	folderPath: string
 	embedId: string
@@ -144,7 +149,7 @@ export function registerDatabaseEmbed(plugin: NotionBasesPlugin): void {
 
 		// Generate and persist ID if missing
 		if (!embedId) {
-			embedId = 'nb' + Math.random().toString(36).slice(2, 10)
+			embedId = newEmbedId()
 			const hostFile = plugin.app.vault.getFileByPath(ctx.sourcePath)
 			if (hostFile) {
 				plugin.app.vault.process(hostFile, (content) => {

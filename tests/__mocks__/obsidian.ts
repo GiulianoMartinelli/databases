@@ -20,6 +20,12 @@ export class FuzzySuggestModal<T> {
 	onChooseItem(_item: T): void {}
 	open(): void {}
 }
+export class EditorSuggest<T> {
+	app: unknown
+	context: unknown = null
+	constructor(app: unknown) { this.app = app }
+	getSuggestions(_: unknown): T[] { return [] }
+}
 export class Setting {
 	constructor(_el: unknown) {}
 	setName(): this { return this }

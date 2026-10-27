@@ -531,6 +531,11 @@ const zh: Partial<Record<keyof typeof en, string>> = {
 	arr_preview_cancel: '取消',
 	arr_preview_applied: '已移动 $count 行。',
 
+	// Inline database views
+	cmd_insert_view: '插入数据库视图',
+	insert_view_placeholder: '数据库显示方式...',
+	insert_view_all: '所有视图（标签页）',
+
 	// Quick add
 	cmd_quick_add: '快速向数据库添加行',
 	quick_add_title: '快速添加',

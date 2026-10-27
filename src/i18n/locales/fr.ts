@@ -531,6 +531,11 @@ const fr: Partial<Record<keyof typeof en, string>> = {
 	arr_preview_cancel: 'Annuler',
 	arr_preview_applied: '$count ligne(s) déplacée(s).',
 
+	// Inline database views
+	cmd_insert_view: 'Insérer une vue de base de données',
+	insert_view_placeholder: 'Afficher la base de données en...',
+	insert_view_all: 'Toutes les vues (onglets)',
+
 	// Quick add
 	cmd_quick_add: 'Ajouter rapidement une ligne à la base de données',
 	quick_add_title: 'Ajout rapide',
